@@ -18,15 +18,21 @@ setTimeout(function(){
 */
 
 function initialize_database() {
+    console.log("starting initialize_database");
     var request = indexedDB.open("fdgis");
     request.onupgradeneeded = function() {
-        // The database did not previously exist, so create object stores and indexes
-        var db = request.result;
-        var store = db.createObjectStore("places", {autoIncrement: true});
-        var titleIndex = store.createIndex("by_name", "name", {unique: true});
-        var titleIndex = store.createIndex("by_source", "source", {unique: true});
+        try {
+            console.log("fdgis db doesn't exist to create it");
+            var db = request.result;
+            console.log("db:", db);
+            var store = db.createObjectStore("places", {autoIncrement: true});
+            console.log("created store", store);
+            var titleIndex = store.createIndex("by_name", "name", {unique: true});
+            var titleIndex = store.createIndex("by_source", "source", {unique: true});
+        } catch (err) { console.error(err); }
     };
 }
+initialize_database();
 console.log("initialize_database:", initialize_database);
 
 function add_place_to_database(place) {
@@ -71,17 +77,18 @@ chrome.tabs.onUpdated.addListener( function (tabId, changeInfo, tab) {
         if (/^https?:\/\/[a-z]{2,3}.wikipedia.org\/wiki\/[A-Za-z\d_,í%]+$/.test(url)) {
             console.log("on wikpedia");
             //regular wikipedia page
-
-            chrome.tabs.executeScript(tabId, { file: "/content_scripts/wikipedia.js"}, function (array_of_results) {
-                var place = JSON.parse(array_of_results[0]);
-                place.source = "Wikipedia";
-                if (place) {
-                    console.log("Content script returned", place);
-                    add_place(place);
-                } else {
-                    console.log("Uh Oh! Failed to get a place from ", url);
-                }
-            });
+            setTimeout(function () {
+                chrome.tabs.executeScript(tabId, { file: "/content_scripts/wikipedia.js"}, function (array_of_results) {
+                    var place = JSON.parse(array_of_results[0]);
+                    place.source = "Wikipedia";
+                    if (place) {
+                        console.log("Content script returned", place);
+                        add_place(place);
+                    } else {
+                        console.log("Uh Oh! Failed to get a place from ", url);
+                    }
+                });
+            }, 3000);
         } else if (/^https?:\/\/www.flickr.com\/photos\/[a-z\d]+\/\d+/.test(url)) {
             console.log("flickr");
             setTimeout (function () {
