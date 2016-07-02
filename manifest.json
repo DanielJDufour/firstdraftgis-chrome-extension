@@ -1,0 +1,29 @@
+{
+  "manifest_version": 2,
+
+  "name": "First Draft GIS",
+  "description": "Shows map of current page and lets you save points",
+  "version": "1.0",
+  "background": {
+      "scripts": [
+          "background.js"
+      ]
+  },
+  "content_security_policy": "script-src 'self' 'unsafe-eval'; object-src 'self'",
+  "browser_action": {
+    "default_icon": "icon.png",
+    "default_popup": "popup.html"
+  },
+  "permissions": [
+    "activeTab",
+    "unlimitedStorage",
+    "storage",
+    "downloads",
+    "http://firstdraftgis.com",
+    "https://firstdraftgis.com",
+    "https://github.com/DanielJDufour/*",
+    "tabs",
+    "<all_urls>",
+    "*"
+  ]
+}

@@ -1,0 +1,55 @@
+<!doctype html>
+<html style="width: 500px; height: 500px;" ng-app="app">
+    <head>
+        <title>First Draft GIS Extension</title>
+        <link href="style.css" rel="stylesheet">
+        <link href="external/bootstrap.min.css" rel="stylesheet">
+        <link href="external/ui-grid.min.css" rel="stylesheet">
+        <link href="external/leaflet.css" rel="stylesheet">
+        <link href="external/leaflet.label.css" rel="stylesheet">
+    </head>
+    <body ng-controller="MainController">
+        <div ng-controller="MapController">
+            <div id="map"></div>
+        </div>
+        <div ng-controller="TableController">
+
+            <div class="gridStyle" ui-grid="gridOptions" ui-grid-edit ui-grid-pagination></div>
+
+            <div style='padding: 5px'>
+                <button type='button' class='btn btn-primary btn-md' data-toggle='modal' data-target='#downloadModal'>
+                    Download
+                </button>
+            </div>
+
+            <div class="modal fade" id="downloadModal" tabindex="-1" role="dialog" aria-labelledby="downloadModalLabel">
+              <div class="modal-dialog" role="document">
+                <div class="modal-content">
+                  <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                    <h4 class="modal-title" id="downloadModalLabel">In what format would you like to download it?</h4>
+                  </div>
+                  <div class="modal-body">
+                      <div class="btn btn-primary" ng-click="download_csv()">CSV</div>
+                      <div class="btn btn-primary" ng-click="download_geojson()">GeoJSON</div>
+                  </div>
+               </div>
+              </div>
+            </div>
+
+        </div>
+
+    </body>
+    <script src='external/jquery-2.2.4.min.js'></script>
+    <script src="external/bootstrap.min.js"></script>
+    <script src="external/leaflet.js"></script>
+    <script src="external/leaflet.label.js"></script>
+    <script src="external/angular.min.js"></script>
+    <script src="external/ui-grid.min.js"></script>
+    <script src='app.js'></script>
+    <script src='controllers/MainController.js'></script>
+    <script src='controllers/MapController.js'></script>
+    <script src='controllers/TableController.js'></script>
+</html>
