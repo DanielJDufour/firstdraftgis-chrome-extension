@@ -9,36 +9,52 @@
         <link href="external/leaflet.label.css" rel="stylesheet">
     </head>
     <body ng-controller="MainController">
-        <div ng-controller="MapController">
-            <div id="map"></div>
+
+        <div id="map"></div>
+        <div class="gridStyle" ui-grid="gridOptions" ui-grid-edit ui-grid-pagination ui-grid-selection></div>
+        <div>
+            <button type='button' class='btn btn-primary btn-md' data-toggle='modal' data-target='#downloadModal' style="margin: 10px;">
+                Download
+            </button>
+            <button type='button' class='btn btn-danger btn-md pull-right' ng-click="delete()" style="margin: 10px;">
+                Delete
+            </button>
         </div>
-        <div ng-controller="TableController">
 
-            <div class="gridStyle" ui-grid="gridOptions" ui-grid-edit ui-grid-pagination></div>
-
-            <div style='padding: 5px'>
-                <button type='button' class='btn btn-primary btn-md' data-toggle='modal' data-target='#downloadModal'>
-                    Download
-                </button>
-            </div>
-
-            <div class="modal fade" id="downloadModal" tabindex="-1" role="dialog" aria-labelledby="downloadModalLabel">
-              <div class="modal-dialog" role="document">
+        <!-- are you sure you want to delete everything popup -->
+        <div class="modal fade" id="deleteModal" tabindex="-1" role="dialog" aria-labelledby="deleteModalLabel">
+            <div class="modal-dialog" role="document">
                 <div class="modal-content">
-                  <div class="modal-header">
-                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                        <span aria-hidden="true">&times;</span>
-                    </button>
-                    <h4 class="modal-title" id="downloadModalLabel">In what format would you like to download it?</h4>
-                  </div>
-                  <div class="modal-body">
-                      <div class="btn btn-primary" ng-click="download_csv()">CSV</div>
-                      <div class="btn btn-primary" ng-click="download_geojson()">GeoJSON</div>
-                  </div>
-               </div>
-              </div>
+                    <div class="modal-header">
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                        <h4 class="modal-title" id="deleteModalLabel">Are you sure you want to delete everything?</h4>
+                    </div>
+                    <div class="modal-body" style="text-align: center;">
+                        <div class="btn btn-danger" ng-click="delete_all_places()">Yes</div>
+                        <div class="btn btn-default" data-dismiss="modal" aria-label="Close">No</div>
+                    </div>
+                </div>
             </div>
+        </div>
 
+        <!-- DOWNLOAD MODAL -->
+        <div class="modal fade" id="downloadModal" tabindex="-1" role="dialog" aria-labelledby="downloadModalLabel">
+            <div class="modal-dialog" role="document">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                        <h4 class="modal-title" id="downloadModalLabel">In what format would you like to download it?</h4>
+                    </div>
+                    <div class="modal-body">
+                        <div class="btn btn-primary" ng-click="download_csv()">CSV</div>
+                        <div class="btn btn-primary" ng-click="download_geojson()">GeoJSON</div>
+                    </div>
+                </div>
+            </div>
         </div>
 
     </body>
@@ -50,6 +66,4 @@
     <script src="external/ui-grid.min.js"></script>
     <script src='app.js'></script>
     <script src='controllers/MainController.js'></script>
-    <script src='controllers/MapController.js'></script>
-    <script src='controllers/TableController.js'></script>
 </html>

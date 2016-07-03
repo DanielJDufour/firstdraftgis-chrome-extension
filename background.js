@@ -1,21 +1,8 @@
 console.log("starting background.js");
 
-/*
-chrome.browserAction.onClicked.addListener(function (tab) {
-    // ...if it matches, send a message specifying a callback too
-    chrome.tabs.sendMessage(tab.id, {text: 'report_back'}, doStuffWithDom);
-});
-*/
+NAME_OF_STORE = "places";
 
-/*
-setTimeout(function(){
-
-    chrome.tabs.executeScript({
-        code: "window.document.documentElement.textContent"
-    }, function(x){t=x;});
-
-}, 2000);
-*/
+var places = [];
 
 function initialize_database() {
     console.log("starting initialize_database");
@@ -25,10 +12,10 @@ function initialize_database() {
             console.log("fdgis db doesn't exist to create it");
             var db = request.result;
             console.log("db:", db);
-            var store = db.createObjectStore("places", {autoIncrement: true});
+            var store = db.createObjectStore(NAME_OF_STORE, {autoIncrement: true});
             console.log("created store", store);
-            var titleIndex = store.createIndex("by_name", "name", {unique: true});
-            var titleIndex = store.createIndex("by_source", "source", {unique: true});
+            store.createIndex("by_name", "name", {unique: true});
+            store.createIndex("by_source", "source", {unique: false});
         } catch (err) { console.error(err); }
     };
 }
@@ -38,20 +25,37 @@ console.log("initialize_database:", initialize_database);
 function add_place_to_database(place) {
     console.log("starting add_place_to_database with", place);
     var request = indexedDB.open("fdgis");
-    request.onsuccess = function() {
-        db = request.result;
-        var transaction = db.transaction("places", "readwrite");
-        var store = transaction.objectStore("places");
-        store.put(place);
+    request.onerror = function(event) {
+        console.error(event);
+    };
+    request.onsuccess = function(event) {
+        try {
+            console.log("request.onsucess event", event);
+            db = request.result;
+            var transaction = db.transaction(NAME_OF_STORE, "readwrite");
+            var store = transaction.objectStore(NAME_OF_STORE);
+            store.put(place);
+
+            transaction.onabort = function(event) { console.error(transaction.error); }
+
+            transaction.oncomplete = function() {
+                console.log("put", place, "in", store);
+            }
+
+        } catch (error) { console.error(error); }
     };
 }
 console.log("add_place_to_database:", add_place_to_database);
 
 
+
 function add_place(place) {
-    console.log("starting add_place with", place);
-    add_place_to_database(place);
-    chrome.runtime.sendMessage(place);
+    try {
+        console.log("starting add_place with", place);
+        add_place_to_database(place);
+        chrome.runtime.sendMessage(place);
+        console.log("send")
+    } catch (error) { console.error(error); }
 }
 console.log("add_place:", add_place);
 
@@ -59,6 +63,8 @@ console.log("add_place:", add_place);
 chrome.tabs.onUpdated.addListener( function (tabId, changeInfo, tab) {
     var status = changeInfo.status;
     var url = tab.url;
+    //console.log("url:", url);
+    //console.log("status:", status);
     if (status == 'loading') {
         var url = tab.url;
 
@@ -73,7 +79,6 @@ chrome.tabs.onUpdated.addListener( function (tabId, changeInfo, tab) {
         xhr.send();
         */
     } else if (status == "complete") {
-        console.log('complete', url);
         if (/^https?:\/\/[a-z]{2,3}.wikipedia.org\/wiki\/[A-Za-z\d_,í%]+$/.test(url)) {
             console.log("on wikpedia");
             //regular wikipedia page
@@ -88,10 +93,11 @@ chrome.tabs.onUpdated.addListener( function (tabId, changeInfo, tab) {
                         console.log("Uh Oh! Failed to get a place from ", url);
                     }
                 });
-            }, 3000);
-        } else if (/^https?:\/\/www.flickr.com\/photos\/[a-z\d]+\/\d+/.test(url)) {
+            }, 2000);
+        } else if (/^https?:\/\/www.flickr.com\/photos\/[a-z\d_]+\/\d+/.test(url)) {
             console.log("flickr");
             setTimeout (function () {
+                console.log("executing script for flickr");
                 chrome.tabs.executeScript(tabId, { file: "/content_scripts/flickr.js"}, function(array_of_results) {
                     console.log("array_of_results:", array_of_results);
                     var place = JSON.parse(array_of_results[0]);
