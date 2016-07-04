@@ -79,9 +79,10 @@ function($scope, $http, $window, $compile, $element) {
     $scope.download_csv = function() {
         console.log("starting download_csv");
         csvContent = 'place, latitude, longitude';
-        $scope.places.forEach(function(place, index){
+        var selectedRows = $scope.gridApi.selection.getSelectedRows();
+        (selectedRows.length == 0 ? $scope.places : selectedRows).forEach(function(place){
             csvContent += '\n"' + place.name + '", ' + place.coordinates[0] + ', ' + place.coordinates[1];
-        })
+        });
         var options = {
             url: URL.createObjectURL(new Blob( [csvContent], {type: 'text/csv'} )),
             filename: "fdgis_places.csv",
@@ -92,18 +93,17 @@ function($scope, $http, $window, $compile, $element) {
 
     $scope.download_geojson = function() {
         console.log("starting download_geojson");
-        var geojson = JSON.stringify({
-            type: "FeatureCollection",
-            features: $scope.places.map(function(place){
+        var geojson = {type: "FeatureCollection"};
+        var selectedRows = $scope.gridApi.selection.getSelectedRows();
+        geojson.features = (selectedRows.length == 0 ? $scope.places: selectedRows).map(function(place){
                 return {
                     type: "Feature",
                     geometry: {"type": "Point", "coordinates": place.coordinates},
                     properties: {"name": place.name}
-                }
-            })
-        });
+                };
+            });
         var options = {
-            url: URL.createObjectURL(new Blob([geojson], {type: "application/vnd.geo+json"})),
+            url: URL.createObjectURL(new Blob([JSON.stringify(geojson)], {type: "application/vnd.geo+json"})),
             filename: "fdgis_places.geojson",
             saveAs: true
         };
@@ -113,7 +113,6 @@ function($scope, $http, $window, $compile, $element) {
     $scope.delete = function() {
         console.log("starting delete");
         var selectedRows = $scope.gridApi.selection.getSelectedRows();
-        console.log("selectedRows:", selectedRows);
         if (selectedRows.length == 0) {
             deleteModal.modal();
             // if you select yes in the modal, it will call delete_all_places
