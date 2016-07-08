@@ -27,7 +27,7 @@ function($scope, $http, $window, $compile, $element) {
         transaction.oncomplete = function (event) {
             $scope.places = temp_places;
             $scope.places.forEach(function(place){
-                var marker = L.marker(place.coordinates, {clickable: true});
+                var marker = L.marker(place.point, {clickable: true});
                 marker.key = place.key; //modding layer marker object by adding key property
                 marker.bindPopup(place.name).addTo(map);
             });

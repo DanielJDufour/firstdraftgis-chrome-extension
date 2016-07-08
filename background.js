@@ -103,12 +103,42 @@ chrome.tabs.onUpdated.addListener( function (tabId, changeInfo, tab) {
                     var place = JSON.parse(array_of_results[0]);
                     place.source = "Flickr";
                     if (place) {
-                        add_place(place)
+                        add_place(place);
                     } else {
                         console.log("Uh Oh! Failed to get a place from ", url);
                     }
                 });
             }, 3000);
+        } else if (/^https?:\/\/www.openstreetmap.org\/node\/\d+/.test(url)) {
+            console.log("openstreetmap.org/node/");
+            setTimeout (function () {
+                console.log("executing script for OpenStreetMap Node");
+                chrome.tabs.executeScript(tabId, { file: "/content_scripts/osm_node.js"}, function(array_of_results) {
+                    console.log("array_of_results:", array_of_results);
+                    var place = JSON.parse(array_of_results[0]);
+                    place.source = "OSM";
+                    if (place) {
+                        add_place(place);
+                    } else {
+                        console.log("Uh Oh! Failed to get a place from ", url);
+                    }
+                });
+            }, 2000);
+        } else if (/^https?:\/\/www.openstreetmap.org\/relation\/\d+/.test(url)) {
+            console.log("openstreetmap.org/relation/");
+            setTimeout (function () {
+                console.log("executing script for OpenStreetMap Relation");
+                chrome.tabs.executeScript(tabId, { file: "/content_scripts/osm_relation.js"}, function(array_of_results) {
+                    console.log("array_of_results:", array_of_results);
+                    var place = JSON.parse(array_of_results[0]);
+                    place.source = "OSM";
+                    if (place) {
+                        add_place(place);
+                    } else {
+                        console.log("Uh Oh! Failed to get a place from ", url);
+                    }
+                });
+            }, 2000);
         }
     }
 })
