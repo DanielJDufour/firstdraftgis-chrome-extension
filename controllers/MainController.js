@@ -26,12 +26,15 @@ function($scope, $http, $window, $compile, $element) {
         var transaction = db.transaction("places", "readonly");
         transaction.oncomplete = function (event) {
             $scope.places = temp_places;
+            $scope.markers = [];
             $scope.places.forEach(function(place){
                 try {
                     // supporting old version that had coordinates as point
-                    var marker = L.marker((place.point || place.coordinates), {clickable: true});
+                    //var marker = L.marker((place.point || place.coordinates), {clickable: true});
+                    var marker = L.circleMarker((place.point||place.coordinates), {clickable: true})
                     marker.key = place.key; //modding layer marker object by adding key property
                     marker.bindPopup(place.name).addTo(map);
+                    $scope.markers.push(marker);
                 } catch (err) {console.error(err);}
             });
 
@@ -54,6 +57,30 @@ function($scope, $http, $window, $compile, $element) {
         };
     };
 
+    var selectedMarkerStyle = {
+        color: "red",
+        fillColor: "red"
+    };
+
+    var unselectedMarkerStyle = {
+        color: "blue",
+        fillColor: "blue"
+    };
+
+    $scope.setMarkerStyleForRowItem = function(rowItem){
+        var key = rowItem.entity.key;
+        var marker = _.find($scope.markers, function(marker){
+            return marker.key === key;
+        });
+        if (rowItem.isSelected) {
+            marker.setStyle(selectedMarkerStyle);
+            marker.bringToFront();
+        } else {
+            marker.setStyle(unselectedMarkerStyle);
+            marker.bringToBack();
+        }
+    };
+
     $scope.gridOptions = {
         columnDefs: [
             {displayName: 'Name', enableFiltering: true, enableSorting: true, field: 'name'},
@@ -72,6 +99,14 @@ function($scope, $http, $window, $compile, $element) {
         multiSelect: true,
         onRegisterApi: function(api) {
             $scope.gridApi = api;
+            api.selection.on.rowSelectionChanged($scope, function(rowItem){
+                $scope.setMarkerStyleForRowItem(rowItem);
+            });
+            api.selection.on.rowSelectionChangedBatch($scope, function(rows){
+                rows.forEach(function(rowItem){
+                    $scope.setMarkerStyleForRowItem(rowItem);
+                });
+            });
         },
         paginationPageSizes: [10],
         paginationPageSize: 10,

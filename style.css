@@ -6,3 +6,9 @@
     height: 175px;
     width: 100%;
 }
+
+.selected {
+    z-index: 999;
+    color: green;
+    background-color: black;
+}
