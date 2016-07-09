@@ -33,7 +33,11 @@ function($scope, $http, $window, $compile, $element) {
                     //var marker = L.marker((place.point || place.coordinates), {clickable: true});
                     var marker = L.circleMarker((place.point||place.coordinates), {clickable: true})
                     marker.key = place.key; //modding layer marker object by adding key property
-                    marker.bindPopup(place.name).addTo(map);
+                    marker.bindPopup(
+                        "<div style='text-align:center'><b>"+place.name+"</b></div>" +
+                        "<div><b>Latitude:</b> " + (place.point||place.coordinates)[0] + "</div>" +
+                        "<div><b>Longitude:</b> " + (place.point||place.coordinates)[1] + "</div>"
+                    ).addTo(map);
                     $scope.markers.push(marker);
                 } catch (err) {console.error(err);}
             });
