@@ -27,9 +27,12 @@ function($scope, $http, $window, $compile, $element) {
         transaction.oncomplete = function (event) {
             $scope.places = temp_places;
             $scope.places.forEach(function(place){
-                var marker = L.marker(place.point, {clickable: true});
-                marker.key = place.key; //modding layer marker object by adding key property
-                marker.bindPopup(place.name).addTo(map);
+                try {
+                    // supporting old version that had coordinates as point
+                    var marker = L.marker((place.point || place.coordinates), {clickable: true});
+                    marker.key = place.key; //modding layer marker object by adding key property
+                    marker.bindPopup(place.name).addTo(map);
+                } catch (err) {console.error(err);}
             });
 
             // if the ui-grid has already initialized, we need to refresh it
@@ -81,7 +84,7 @@ function($scope, $http, $window, $compile, $element) {
         csvContent = 'place, latitude, longitude';
         var selectedRows = $scope.gridApi.selection.getSelectedRows();
         (selectedRows.length == 0 ? $scope.places : selectedRows).forEach(function(place){
-            csvContent += '\n"' + place.name + '", ' + place.coordinates[0] + ', ' + place.coordinates[1];
+            csvContent += '\n"' + place.name + '", ' + (place.point || place.coordinates)[0] + ', ' + (place.point || place.coordinates)[1];
         });
         var options = {
             url: URL.createObjectURL(new Blob( [csvContent], {type: 'text/csv'} )),
@@ -98,7 +101,7 @@ function($scope, $http, $window, $compile, $element) {
         geojson.features = (selectedRows.length == 0 ? $scope.places: selectedRows).map(function(place){
                 return {
                     type: "Feature",
-                    geometry: {"type": "Point", "coordinates": place.coordinates},
+                    geometry: {"type": "Point", "coordinates": (place.point || place.coordinates)},
                     properties: {"name": place.name}
                 };
             });

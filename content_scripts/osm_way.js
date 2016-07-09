@@ -3,14 +3,14 @@ var multipolygon = null;
 var point = null;
 
 request = new XMLHttpRequest();
-var id_of_relation = document.location.pathname.split("/")[2];
-request.open("GET", "https://www.openstreetmap.org/api/0.6/relation/" + id_of_relation + "/full", false);
+var id_of_way = document.location.pathname.split("/")[2];
+request.open("GET", "https://www.openstreetmap.org/api/0.6/way/" + id_of_way + "/full", false);
 request.send();
 geojson = osmtogeojson(request.responseXML);
 if (geojson.type === "FeatureCollection") {
-    // find the primary feature for the relation
+    // find the primary feature for the way
     // ignore tangential indirectly related features
-    var feature = _.find(geojson.features, function(feature){ return feature.id === "relation/" + id_of_relation; });
+    var feature = _.find(geojson.features, function(feature){ return feature.id === "way/" + id_of_way; });
     if (feature.geometry.type === "Polygon") {
         // eventhough it only has one polygon, we store all shapes with filling as multipolygons
         // because it makes the database management easier
