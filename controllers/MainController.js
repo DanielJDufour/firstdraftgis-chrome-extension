@@ -18,6 +18,18 @@ function($scope, $http, $window, $compile, $element) {
         maxZoom: 18
     }).addTo(map);
 
+    var selectedMarkerOptions = {
+        clickable: true,
+        color: "red",
+        fillColor: "red"
+    };
+
+    var unselectedMarkerOptions = {
+        clickable: true,
+        color: "blue",
+        fillColor: "blue"
+    };
+
     console.log("loading all places");
     var temp_places = [];
     var request = indexedDB.open(NAME_OF_DATABASE);
@@ -30,8 +42,7 @@ function($scope, $http, $window, $compile, $element) {
             $scope.places.forEach(function(place){
                 try {
                     // supporting old version that had coordinates as point
-                    //var marker = L.marker((place.point || place.coordinates), {clickable: true});
-                    var marker = L.circleMarker((place.point||place.coordinates), {clickable: true})
+                    var marker = L.circleMarker((place.point||place.coordinates), unselectedMarkerOptions);
                     marker.key = place.key; //modding layer marker object by adding key property
                     marker.bindPopup(
                         "<div style='text-align:center'><b>"+place.name+"</b></div>" +
@@ -61,15 +72,7 @@ function($scope, $http, $window, $compile, $element) {
         };
     };
 
-    var selectedMarkerStyle = {
-        color: "red",
-        fillColor: "red"
-    };
 
-    var unselectedMarkerStyle = {
-        color: "blue",
-        fillColor: "blue"
-    };
 
     $scope.setMarkerStyleForRowItem = function(rowItem){
         var key = rowItem.entity.key;
@@ -77,10 +80,10 @@ function($scope, $http, $window, $compile, $element) {
             return marker.key === key;
         });
         if (rowItem.isSelected) {
-            marker.setStyle(selectedMarkerStyle);
+            marker.setStyle(selectedMarkerOptions);
             marker.bringToFront();
         } else {
-            marker.setStyle(unselectedMarkerStyle);
+            marker.setStyle(unselectedMarkerOptions);
             marker.bringToBack();
         }
     };
@@ -114,8 +117,15 @@ function($scope, $http, $window, $compile, $element) {
         },
         paginationPageSizes: [10],
         paginationPageSize: 10,
+        rowTemplate: '<div ng-right-click="showRowMenu()">' +
+                ' <div ng-repeat="(colRenderIndex, col) in colContainer.renderedColumns track by col.colDef.name" class="ui-grid-cell" ng-class="{ \'ui-grid-row-header-cell\': col.isRowHeader }"  ui-grid-cell></div>' +
+              '</div>',
         showFilter: true,
         showSelectionBox: true
+    };
+
+    $scope.showRowMenu = function() {
+        console.log("showRowMenu:");
     };
 
     $scope.download_csv = function() {
@@ -135,15 +145,60 @@ function($scope, $http, $window, $compile, $element) {
 
     $scope.download_geojson = function() {
         console.log("starting download_geojson");
-        var geojson = {type: "FeatureCollection"};
+        var geojson = {type: "FeatureCollection", features: []};
         var selectedRows = $scope.gridApi.selection.getSelectedRows();
-        geojson.features = (selectedRows.length == 0 ? $scope.places: selectedRows).map(function(place){
-                return {
-                    type: "Feature",
-                    geometry: {"type": "Point", "coordinates": (place.point || place.coordinates)},
-                    properties: {"name": place.name}
+        console.log("selectedRows:", selectedRows);
+        console.log("scope.places:", $scope.places);
+        (selectedRows.length == 0 ? $scope.places: selectedRows).forEach(function(place){
+            // want to make this into a geometry collection if have more than just point
+
+            var number_of_geometries =
+            _.has(place, 'point') +
+            _.has(place, "coordinates") +
+            _.has(place, "multipolygon");
+
+            if (number_of_geometries == 1) {
+                // if only one geometry, we know this has to be a point
+                geojson.features.push(
+                    turf.point(
+                        //we reverse because db stores as latlng
+                        (place.point || place.coordinates).slice().reverse(), {name: place.name}
+                    )
+                );
+            } else {
+                var feature = {
+                    type:"Feature",
+                    geometry: {
+                        type: "GeometryCollection",
+                        geometries: []
+                    },
+                    properties: {
+                        name: place.name
+                    }
                 };
-            });
+                if (place.point) {
+                    feature.geometry.geometries.push({
+                        type: 'Point',
+                        coordinates: place.point.slice().reverse()
+                    });
+                }
+                if (place.multipolygon) {
+                    var polygons = place.multipolygon;
+                    var number_of_polygons = polygons.length;
+                    if (number_of_polygons === 1) {
+                        feature.geometry.geometries.push({
+                            type: 'Polygon',
+                            coordinates: turf.flip(turf.polygon(polygons[0])).geometry
+                        });
+                    } else if (number_of_polygons > 1) {
+                        feature.geometry.geometries.push({
+                            type: 'MultiPolygon',
+                            coordinates: turf.flip(turf.multiPolygon(polygons)).geometry
+                        });
+                    }
+                }
+            }
+        });
         var options = {
             url: URL.createObjectURL(new Blob([JSON.stringify(geojson)], {type: "application/vnd.geo+json"})),
             filename: "fdgis_places.geojson",
@@ -180,7 +235,7 @@ function($scope, $http, $window, $compile, $element) {
             // remove markers that are in list of those to delete
             for (var key in map._layers) {
                 var layer = map._layers[key];
-                if (layer instanceof L.Marker) {
+                if (layer instanceof L.CircleMarker) {
                     if (keys_of_places_to_delete.indexOf(layer.key) > -1) {
                         map.removeLayer(layer);
                     }
@@ -206,7 +261,7 @@ function($scope, $http, $window, $compile, $element) {
         // deleting all places from the map
         for (var key in map._layers) {
             var layer = map._layers[key];
-            if (layer instanceof L.Marker) {
+            if (layer instanceof L.CircleMarker) {
                 map.removeLayer(layer);
             }
         }

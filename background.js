@@ -63,21 +63,9 @@ console.log("add_place:", add_place);
 chrome.tabs.onUpdated.addListener( function (tabId, changeInfo, tab) {
     var status = changeInfo.status;
     var url = tab.url;
-    //console.log("url:", url);
-    //console.log("status:", status);
     if (status == 'loading') {
         var url = tab.url;
 
-        /*
-        var xhr = new XMLHttpRequest();
-        xhr.open("POST", "http://firstdraftgis.com/extension", true);
-        xhr.onreadystatechange = function() {
-            if (xhr.readyState == 4) {
-                console.log()
-            }
-        }
-        xhr.send();
-        */
     } else if (status == "complete") {
         if (/^https?:\/\/[a-z]{2,3}.wikipedia.org\/wiki\/[A-Za-z\d_,í%]+$/.test(url)) {
             console.log("on wikpedia");
@@ -131,6 +119,7 @@ chrome.tabs.onUpdated.addListener( function (tabId, changeInfo, tab) {
                 chrome.tabs.executeScript(tabId, { file: "/external/underscore-min.js" });
                 chrome.tabs.executeScript(tabId, { file: "/external/osmtogeojson.js" });
                 chrome.tabs.executeScript(tabId, { file: "/external/turf.min.js" });
+                chrome.tabs.executeScript(tabId, { file: "/content_scripts/get_geometries_from_geojson.js" });
                 chrome.tabs.executeScript(tabId, { file: "/content_scripts/osm_relation.js"}, function(array_of_results) {
                     console.log("array_of_results:", array_of_results);
                     var place = JSON.parse(array_of_results[0]);
@@ -149,6 +138,7 @@ chrome.tabs.onUpdated.addListener( function (tabId, changeInfo, tab) {
                 chrome.tabs.executeScript(tabId, { file: "/external/underscore-min.js" });
                 chrome.tabs.executeScript(tabId, { file: "/external/osmtogeojson.js" });
                 chrome.tabs.executeScript(tabId, { file: "/external/turf.min.js" });
+                chrome.tabs.executeScript(tabId, { file: "/content_scripts/get_geometries_from_geojson.js" });
                 chrome.tabs.executeScript(tabId, { file: "/content_scripts/osm_way.js"}, function(array_of_results) {
                     console.log("array_of_results:", array_of_results);
                     var place = JSON.parse(array_of_results[0]);
@@ -161,5 +151,6 @@ chrome.tabs.onUpdated.addListener( function (tabId, changeInfo, tab) {
                 });
             }, 2000);
         }
+        //http://wiki.openstreetmap.org/wiki/New_York,_New_York
     }
 })
